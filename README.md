@@ -82,6 +82,8 @@ Unprivileged RISCV
   - MEM: memory access
   - WB: write back
 
+See [base instruction set RV32I](./src/static/RV32I.png)
+
 ### ZkVMs
 
 1. Write code
