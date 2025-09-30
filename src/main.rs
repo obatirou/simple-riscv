@@ -1,9 +1,11 @@
 /// RisVInterpreterRV32I
 
-const MASK_OPCODE: u32 = 0b1111111;
-const MASK_IMM: u32 = 0b11111111111111111111;
+const MASK_7_BITS: u32 = 0b1111111;
+const MASK_20_BITS: u32 = 0b11111111111111111111;
+const MASK_5_BITS: u32 = 0b11111;
 enum Opcode {
     Lui = 0b0110111,
+    Auipc = 0b0010111,
     Illegal,
 }
 
@@ -11,6 +13,7 @@ impl From<u32> for Opcode {
     fn from(value: u32) -> Self {
         match value {
             0b0110111 => Opcode::Lui,
+            0b0010111 => Opcode::Auipc,
             _ => Opcode::Illegal,
         }
     }
@@ -22,7 +25,10 @@ pub struct RawInstruction {
 
 impl RawInstruction {
     pub fn rd(&self) -> usize {
-        ((self.bits >> 7) & 0b11111) as usize
+        ((self.bits >> 7) & MASK_5_BITS) as usize
+    }
+    pub fn imm_20(&self) -> u32 {
+        self.bits >> 12 & MASK_20_BITS
     }
 }
 
@@ -60,9 +66,10 @@ impl Interpreter {
     }
 
     pub fn execute(&mut self, raw_instruction: RawInstruction) {
-        let opcode = Opcode::from(raw_instruction.bits & MASK_OPCODE);
+        let opcode = Opcode::from(raw_instruction.bits & MASK_7_BITS);
         match opcode {
             Opcode::Lui => self.execute_lui(raw_instruction),
+            Opcode::Auipc => self.execute_auipc(raw_instruction),
             _ => panic!("Invalid opcode"),
         }
     }
@@ -71,14 +78,23 @@ impl Interpreter {
     // Loads the upper 20 bits of the immediate value into the destination register.
     pub fn execute_lui(&mut self, raw_instruction: RawInstruction) {
         let rd = raw_instruction.rd();
-        let imm_20 = raw_instruction.bits >> 12 & MASK_IMM;
+        let imm_20 = raw_instruction.imm_20();
         self.registers[rd] = imm_20 << 12;
+        self.pc += 4;
+    }
+
+    // AUIPC: Add Upper Immediate to PC
+    // Adds the upper 20 bits of the immediate value to the program counter into the destination register.
+    pub fn execute_auipc(&mut self, raw_instruction: RawInstruction) {
+        let rd = raw_instruction.rd();
+        let imm_20 = raw_instruction.imm_20();
+        self.registers[rd] = imm_20 << 12 + self.pc;
         self.pc += 4;
     }
 }
 
 fn main() {
     let mut interpreter = Interpreter::new();
-    interpreter.load_program(&[0x01, 0x00, 0x00, 0xB7]); // lui x1, 0x1000
+    interpreter.load_program(&[0x01, 0x00, 0x00, 0xB7, 0x01, 0x00, 0x00, 0x97]); // lui x1, 0x1000 auipc x1, 0x1000
     interpreter.run();
 }
