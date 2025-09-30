@@ -5,7 +5,7 @@ Unprivileged RISCV
 - Limited set of instructions
 - Load-store: only load and store access memory, everything else works on CPU registers. Simplify the design of hardware.
 - Fixed length instruction encoding: 32bit long. All registers are in constant locations.
-- 32 general purpose integer registers encoraging to keep frequently used variables in them minimizing memory accesses.
+- 32 general purpose integer registers encouraging to keep frequently used variables in them minimizing memory accesses.
 - Simplicity makes it convenient for pipelining: processing can process in parallel several instructions.
 
 ## Modular ISA:
@@ -56,6 +56,7 @@ Unprivileged RISCV
 
     `| 12 bits | 5b | 3 bits | 5b | 7 bits |`
   - S: store operations
+
     `| imm[11:5] | rs2 | rs1 | funct3 | imm[4:0] | opcode |`
 
     `| 7 bits | 5b | 5b | 3 bits | 5 bits | 7 bits |`
